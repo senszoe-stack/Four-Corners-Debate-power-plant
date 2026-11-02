@@ -62,17 +62,17 @@
       font-family: 'Huninn', 'Noto Sans TC', system-ui, sans-serif;
       color: #5B4B63;
       background:
-        radial-gradient(900px 600px at 12% 8%,  #FFE1E8 0%, transparent 60%),
-        radial-gradient(900px 600px at 90% 8%,  #DCEBFA 0%, transparent 60%),
-        radial-gradient(900px 600px at 88% 92%, #D8F0E4 0%, transparent 60%),
-        radial-gradient(900px 600px at 10% 92%, #FFE7CF 0%, transparent 60%),
-        #FFF7EC;
+        radial-gradient(900px 600px at 12% 8%,  #F4BFCB 0%, transparent 60%),
+        radial-gradient(900px 600px at 90% 8%,  #B7D3F0 0%, transparent 60%),
+        radial-gradient(900px 600px at 88% 92%, #B5DEC6 0%, transparent 60%),
+        radial-gradient(900px 600px at 10% 92%, #F5C99B 0%, transparent 60%),
+        #EAD7BC;
     }
     /* 淡淡的圓點底紋 */
     body::before {
       content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-      background-image: radial-gradient(#F0D3BD 2px, transparent 2.5px);
-      background-size: 30px 30px; opacity: .45;
+      background-image: radial-gradient(#D2B48F 2px, transparent 2.5px);
+      background-size: 30px 30px; opacity: .5;
     }
 
     /* ===== 動態島：寬度與高度平滑展開 ===== */
@@ -117,20 +117,11 @@
     ⚠️ 尚未填寫 SUPABASE_URL / SUPABASE_KEY，請先編輯本檔案頂端的 JavaScript 變數。
   </div>
 
-  <!-- 飄浮的可愛小圖樣 -->
-  <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
-    <span class="absolute text-6xl animate-float opacity-90" style="left:22%; top:24%;">⚡</span>
-    <span class="absolute text-6xl animate-float opacity-90" style="right:22%; top:28%; animation-delay:-1.2s;">💡</span>
-    <span class="absolute text-5xl animate-float opacity-80" style="left:11%; top:48%; animation-delay:-2.4s;">🔋</span>
-    <span class="absolute text-5xl animate-float opacity-80" style="right:11%; top:50%; animation-delay:-3.1s;">☀️</span>
-    <span class="absolute text-5xl animate-float opacity-80" style="left:30%; bottom:30%; animation-delay:-.6s;">🌬️</span>
-    <span class="absolute text-5xl animate-float opacity-80" style="right:30%; bottom:27%; animation-delay:-1.9s;">🌱</span>
-    <span class="absolute text-4xl animate-float opacity-70" style="left:42%; top:12%; animation-delay:-2.8s;">✨</span>
-    <span class="absolute text-4xl animate-float opacity-70" style="right:40%; bottom:22%; animation-delay:-.3s;">🏭</span>
-  </div>
+  <!-- 飄浮的可愛小圖樣（由 JS 放入） -->
+  <div id="floatHost" class="fixed inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true"></div>
 
   <!-- 頂部：班級設定 -->
-  <div class="fixed top-5 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-white/90 rounded-full pl-5 pr-2 py-2 border-2 border-[#F3D9C4] shadow-lg shadow-orange-200/40">
+  <div class="fixed top-5 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-white/90 rounded-full pl-5 pr-2 py-2 border-2 border-[#E6C7A6] shadow-lg shadow-orange-300/40">
     <span class="text-[#5B4B63]/60 text-sm whitespace-nowrap">🏫 目前班級</span>
     <input id="classInput" list="classList" autocomplete="off" placeholder="例：一年一班"
            class="bg-transparent outline-none w-40 text-lg font-bold text-center placeholder-[#5B4B63]/30" />
@@ -160,7 +151,7 @@
       你贊成增建更多<span class="bg-[linear-gradient(transparent_62%,#FFD6A5_62%)] px-1">電廠</span>嗎？
     </h1>
 
-    <p id="classLabel" class="mt-6 px-7 py-2 rounded-full bg-white/85 border-2 border-[#F3D9C4] text-2xl font-bold shadow-md shadow-orange-200/40">尚未設定班級</p>
+    <p id="classLabel" class="mt-6 px-7 py-2 rounded-full bg-white/85 border-2 border-[#E6C7A6] text-2xl font-bold shadow-md shadow-orange-300/40">尚未設定班級</p>
 
     <div id="voteChip" class="mt-5 px-6 py-2 rounded-full border-2 border-[#E5DDEA] bg-white/70 text-[#5B4B63]/60 text-lg transition-all duration-700">
       🔒 終極投票：未開放
@@ -171,8 +162,8 @@
   <div id="islandHost" class="relative z-20"></div>
 
   <!-- 底部控制面板 -->
-  <footer class="fixed bottom-0 inset-x-0 h-24 z-30 bg-white/85 backdrop-blur-xl border-t-2 border-[#F3D9C4] flex items-center justify-between px-6 lg:px-10">
-    <div class="flex items-center gap-2 text-[#5B4B63]/60 w-52">
+  <footer class="fixed bottom-0 inset-x-0 h-24 z-30 bg-white/85 backdrop-blur-xl border-t-2 border-[#E6C7A6] flex items-center justify-between px-6 lg:px-10">
+    <div class="flex items-center gap-2 text-[#5B4B63]/60 w-36">
       <span id="connDot" class="w-2.5 h-2.5 rounded-full bg-neutral-400"></span>
       <span id="connText" class="text-sm">尚未連線</span>
     </div>
@@ -197,17 +188,43 @@
       </div>
     </div>
 
-    <div class="w-52 flex justify-end">
+    <div class="flex items-center justify-end gap-3">
+      <button id="clearBtn" disabled
+              class="rounded-full px-4 py-3 font-bold bg-[#FDE3E8] text-[#A63D58] border-2 border-[#F4A3B6] shadow-md shadow-pink-300/40 hover:brightness-105 active:scale-95 transition
+                     disabled:opacity-40 disabled:cursor-not-allowed">
+        🧹 清除本班資料
+      </button>
       <button id="exportBtn" disabled
-              class="rounded-full px-5 py-3 font-bold bg-white border-2 border-[#F3D9C4] shadow-md shadow-orange-200/40 hover:bg-[#FFF1E2] active:scale-95 transition
+              class="rounded-full px-4 py-3 font-bold bg-white border-2 border-[#E6C7A6] shadow-md shadow-orange-300/40 hover:bg-[#FFF1E2] active:scale-95 transition
                      disabled:opacity-40 disabled:cursor-not-allowed">
         📊 匯出 Excel成果
       </button>
     </div>
   </footer>
 
+  <!-- 清除確認視窗 -->
+  <div id="clearModal" class="hidden fixed inset-0 z-50">
+    <div class="absolute inset-0 flex items-center justify-center px-5 bg-[#4A3B52]/45">
+      <div class="w-full max-w-lg bg-white rounded-[2rem] border-2 border-[#F4A3B6] p-7 shadow-2xl animate-bubble-in">
+        <h3 class="text-2xl font-black text-[#A63D58]">🧹 清除「<span id="clearClassName"></span>」的資料？</h3>
+        <p class="mt-3 text-lg">將會刪除：</p>
+        <ul class="mt-2 text-lg space-y-1">
+          <li>・理由 <b id="clearArgN">0</b> 則</li>
+          <li>・投票 <b id="clearVoteN">0</b> 票</li>
+          <li>・並關閉終極投票，學生可以重新填寫</li>
+        </ul>
+        <p class="mt-4 text-[#A63D58] font-bold">⚠️ 清除後無法復原，建議先匯出 Excel。</p>
+        <div class="mt-6 flex flex-wrap justify-end gap-3">
+          <button id="clearCancelBtn" class="rounded-full px-5 py-3 font-bold bg-[#F1ECF4] hover:bg-[#E6DDEC] active:scale-95 transition">取消</button>
+          <button id="clearExportBtn" class="rounded-full px-5 py-3 font-bold bg-white border-2 border-[#E6C7A6] hover:bg-[#FFF1E2] active:scale-95 transition">📊 先匯出 Excel</button>
+          <button id="clearConfirmBtn" class="rounded-full px-6 py-3 font-black bg-[#F4A3B6] text-[#4A3F55] shadow-md shadow-pink-300/50 hover:brightness-105 active:scale-95 transition disabled:opacity-50">確定清除</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast -->
-  <div id="toast" class="hidden fixed top-24 left-1/2 z-50 px-6 py-3 rounded-full bg-white border-2 border-[#F3D9C4] text-lg font-bold shadow-xl"></div>
+  <div id="toast" class="hidden fixed top-24 left-1/2 z-50 px-6 py-3 rounded-full bg-white border-2 border-[#E6C7A6] text-lg font-bold shadow-xl"></div>
 
 <script>
 /* =====================================================================
@@ -221,6 +238,121 @@ const CONFIGURED = !SUPABASE_URL.includes('請替換') && !SUPABASE_KEY.includes
 const db = CONFIGURED ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 const $ = (id) => document.getElementById(id);
+
+/* ---------- 可愛小圖樣（手繪 SVG）：發電廠、冷氣機、晶圓、手機、電動機車、樹木、石虎、雲豹 ---------- */
+const ICON_ATTR = 'viewBox="0 0 64 64" style="width:100%;height:100%;overflow:visible" fill="none" stroke="#6B5A73" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"';
+const ICONS = {
+  /* 發電廠：兩座冷卻水塔 + 白煙 */
+  plant: `<svg ${ICON_ATTR}>
+    <circle cx="22" cy="12" r="5" fill="#fff"/><circle cx="29" cy="7" r="4" fill="#fff"/><circle cx="44" cy="17" r="4.5" fill="#fff"/>
+    <path d="M12 56Q17 40 14 22H32Q29 40 34 56Z" fill="#EDE7F3"/>
+    <path d="M36 56Q40 44 38 30H52Q50 44 54 56Z" fill="#F7D9BD"/>
+    <path d="M6 56H60"/>
+    <circle cx="19.5" cy="38" r="1.7" fill="#4A3F55" stroke="none"/><circle cx="27" cy="38" r="1.7" fill="#4A3F55" stroke="none"/>
+    <path d="M21 43q2.5 3 5 0" stroke-width="2"/>
+    <ellipse cx="16.5" cy="42" rx="2.4" ry="1.6" fill="#F8B4C4" stroke="none"/><ellipse cx="30" cy="42" rx="2.4" ry="1.6" fill="#F8B4C4" stroke="none"/>
+  </svg>`,
+
+  /* 冷氣機：掛壁式 + 涼風 */
+  ac: `<svg ${ICON_ATTR}>
+    <rect x="6" y="12" width="52" height="26" rx="9" fill="#fff"/>
+    <path d="M13 32H51" stroke-width="2"/>
+    <circle cx="23" cy="21" r="1.9" fill="#4A3F55" stroke="none"/><circle cx="41" cy="21" r="1.9" fill="#4A3F55" stroke="none"/>
+    <path d="M29 23.5q3 3 6 0" stroke-width="2"/>
+    <ellipse cx="16" cy="25" rx="3" ry="2" fill="#F8B4C4" stroke="none"/><ellipse cx="48" cy="25" rx="3" ry="2" fill="#F8B4C4" stroke="none"/>
+    <path d="M18 43q-4 5 0 11" stroke="#7DB7E8"/><path d="M32 43q-4 5 0 11" stroke="#7DB7E8"/><path d="M46 43q-4 5 0 11" stroke="#7DB7E8"/>
+  </svg>`,
+
+  /* 晶圓：圓盤 + 方格晶粒 + 反光 */
+  wafer: `<svg ${ICON_ATTR}>
+    <defs>
+      <linearGradient id="wfg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#D9C9F2"/><stop offset=".5" stop-color="#BFE0F5"/><stop offset="1" stop-color="#C9F0DA"/></linearGradient>
+      <clipPath id="wfc"><circle cx="32" cy="32" r="25"/></clipPath>
+    </defs>
+    <circle cx="32" cy="32" r="25" fill="url(#wfg)"/>
+    <g clip-path="url(#wfc)" stroke="#8FA6C9" stroke-width="1.2">
+      <path d="M13 6V58M19 6V58M25 6V58M31 6V58M37 6V58M43 6V58M49 6V58"/>
+      <path d="M6 13H58M6 19H58M6 25H58M6 31H58M6 37H58M6 43H58M6 49H58"/>
+    </g>
+    <circle cx="32" cy="32" r="25"/>
+    <path d="M16 22Q20 14 29 11" stroke="#fff" stroke-width="3.2"/>
+    <path d="M27 57h10" stroke-width="2"/>
+  </svg>`,
+
+  /* 手機：笑臉螢幕 */
+  phone: `<svg ${ICON_ATTR}>
+    <rect x="18" y="5" width="28" height="54" rx="8" fill="#fff"/>
+    <rect x="22" y="12" width="20" height="38" rx="3" fill="#BFE1F7" stroke-width="1.6"/>
+    <path d="M28 8.5H36" stroke-width="2"/>
+    <circle cx="28" cy="28" r="1.8" fill="#4A3F55" stroke="none"/><circle cx="36" cy="28" r="1.8" fill="#4A3F55" stroke="none"/>
+    <path d="M29 33q3 3 6 0" stroke-width="1.8"/>
+    <ellipse cx="25.5" cy="32" rx="2" ry="1.4" fill="#F8B4C4" stroke="none"/><ellipse cx="38.5" cy="32" rx="2" ry="1.4" fill="#F8B4C4" stroke="none"/>
+    <circle cx="32" cy="54.5" r="1.6" fill="#6B5A73" stroke="none"/>
+  </svg>`,
+
+  /* 電動機車：薄荷綠車身 + 閃電 */
+  scooter: `<svg ${ICON_ATTR}>
+    <path d="M44 38L47 17H55" />
+    <circle cx="53" cy="22" r="2.2" fill="#FFD86B" stroke-width="1.6"/>
+    <path d="M16 44Q15 33 25 33H38Q44 33 46 40L48 44Z" fill="#8FD6B1"/>
+    <path d="M19 31H33" stroke="#4A3F55" stroke-width="4"/>
+    <circle cx="14" cy="47" r="8" fill="#4A3F55"/><circle cx="14" cy="47" r="3" fill="#E6DDEC" stroke="none"/>
+    <circle cx="50" cy="47" r="8" fill="#4A3F55"/><circle cx="50" cy="47" r="3" fill="#E6DDEC" stroke="none"/>
+    <path d="M33 34L27 41H32L30 47L37 39H32Z" fill="#FFD86B" stroke-width="1.8"/>
+  </svg>`,
+
+  /* 樹木：圓圓的樹冠 + 笑臉 */
+  tree: `<svg ${ICON_ATTR}>
+    <rect x="28" y="40" width="8" height="18" rx="3" fill="#D2A77C"/>
+    <circle cx="32" cy="21" r="15" fill="#9ADBB5"/>
+    <circle cx="19" cy="34" r="11" fill="#9ADBB5"/>
+    <circle cx="45" cy="34" r="11" fill="#9ADBB5"/>
+    <circle cx="32" cy="33" r="14" fill="#9ADBB5" stroke="none"/>
+    <circle cx="27" cy="30" r="1.8" fill="#4A3F55" stroke="none"/><circle cx="37" cy="30" r="1.8" fill="#4A3F55" stroke="none"/>
+    <path d="M29 35q3 3 6 0" stroke-width="2"/>
+    <ellipse cx="23.5" cy="34" rx="2.5" ry="1.7" fill="#F8B4C4" stroke="none"/><ellipse cx="40.5" cy="34" rx="2.5" ry="1.7" fill="#F8B4C4" stroke="none"/>
+    <path d="M18 58H46"/>
+  </svg>`,
+
+  /* 石虎：圓耳、額頭兩道深色縱紋、斑點 */
+  leopardcat: `<svg ${ICON_ATTR}>
+    <circle cx="15" cy="17" r="8" fill="#D9A66C"/><circle cx="49" cy="17" r="8" fill="#D9A66C"/>
+    <circle cx="15" cy="18" r="4" fill="#F8D3C0" stroke="none"/><circle cx="49" cy="18" r="4" fill="#F8D3C0" stroke="none"/>
+    <ellipse cx="32" cy="37" rx="23" ry="19" fill="#D9A66C"/>
+    <path d="M26 20Q27 26 25 31" stroke="#5A3E2B" stroke-width="3"/><path d="M38 20Q37 26 39 31" stroke="#5A3E2B" stroke-width="3"/>
+    <path d="M21 32Q24 28 26.500 29" stroke="#FFF4E6" stroke-width="2"/><path d="M43 32Q40 28 37.500 29" stroke="#FFF4E6" stroke-width="2"/>
+    <g fill="#7A4E2D" stroke="none"><circle cx="13" cy="36" r="1.8"/><circle cx="51" cy="36" r="1.8"/><circle cx="17" cy="45" r="1.8"/><circle cx="47" cy="45" r="1.8"/><circle cx="32" cy="22" r="1.5"/></g>
+    <circle cx="24" cy="36" r="3.2" fill="#3F3447" stroke="none"/><circle cx="40" cy="36" r="3.2" fill="#3F3447" stroke="none"/>
+    <circle cx="25" cy="35" r="1" fill="#fff" stroke="none"/><circle cx="41" cy="35" r="1" fill="#fff" stroke="none"/>
+    <ellipse cx="32" cy="46" rx="9" ry="7" fill="#FFF4E6" stroke="none"/>
+    <path d="M30 42H34L32 45Z" fill="#E88FA5" stroke-width="1.4"/>
+    <path d="M32 45V47M32 47q-3 3-6 0M32 47q3 3 6 0" stroke-width="1.8"/>
+  </svg>`,
+
+  /* 雲豹：雲朵狀斑塊、額頭短紋 */
+  cloudedleopard: `<svg ${ICON_ATTR}>
+    <circle cx="16" cy="18" r="7" fill="#D9C79E"/><circle cx="48" cy="18" r="7" fill="#D9C79E"/>
+    <circle cx="16" cy="19" r="3.500" fill="#8B7A5E" stroke="none"/><circle cx="48" cy="19" r="3.500" fill="#8B7A5E" stroke="none"/>
+    <ellipse cx="32" cy="37" rx="23" ry="18" fill="#D9C79E"/>
+    <g transform="translate(8 8) scale(.75)"><path d="M7 38a4 4 0 0 1 3-6a5 5 0 0 1 9-1a4 4 0 0 1 3 6q-7 3-15 1z" fill="#B59F76" stroke="#5A4A3A" stroke-width="1.8"/></g>
+    <g transform="translate(64 0) scale(-1 1)"><g transform="translate(8 8) scale(.75)"><path d="M7 38a4 4 0 0 1 3-6a5 5 0 0 1 9-1a4 4 0 0 1 3 6q-7 3-15 1z" fill="#B59F76" stroke="#5A4A3A" stroke-width="1.8"/></g></g>
+    <path d="M28 21V27M36 21V27" stroke="#5A4A3A" stroke-width="2.4"/>
+    <circle cx="27" cy="37" r="3.200" fill="#3F3447" stroke="none"/><circle cx="37" cy="37" r="3.200" fill="#3F3447" stroke="none"/>
+    <circle cx="28" cy="36" r="1" fill="#fff" stroke="none"/><circle cx="38" cy="36" r="1" fill="#fff" stroke="none"/>
+    <ellipse cx="32" cy="46.500" rx="8" ry="5.500" fill="#F4EBD5" stroke="none"/>
+    <path d="M30 42.500H34L32 45Z" fill="#D88AA0" stroke-width="1.4"/>
+    <path d="M32 45V47M32 47q-3 3-6 0M32 47q3 3 6 0" stroke-width="1.8"/>
+  </svg>`,
+};
+
+/* 在 #floatHost 放上會輕輕飄浮的小圖樣。list: [{ icon, pos, size, op }] */
+function renderFloaters(list) {
+  const host = document.getElementById('floatHost');
+  if (!host) return;
+  host.innerHTML = list.map((f, i) =>
+    `<div class="absolute animate-float" style="${f.pos};width:${f.size}px;height:${f.size}px;opacity:${f.op};animation-delay:-${(i * 0.9).toFixed(1)}s;filter:drop-shadow(0 4px 4px rgba(90,60,70,.2))">${ICONS[f.icon]}</div>`
+  ).join('');
+}
 
 /* 四個角落的島：左上、右上、左下、右下（accent 為底色、ink 為較深的文字色） */
 const ISLANDS = [
@@ -411,6 +543,7 @@ async function setClass(name) {
   $('classInput').value = name;
   $('classLabel').textContent = '🏫 ' + name;
   $('exportBtn').disabled = false;
+  $('clearBtn').disabled = false;
 
   resetIslands();
   voteCounts = { '贊成': 0, '反對': 0 };
@@ -650,6 +783,63 @@ async function exportExcel() {
   }
 }
 
+/* ---------- 清除本班資料 ---------- */
+function openClearModal() {
+  if (!currentClass) return;
+  $('clearClassName').textContent = currentClass;
+  $('clearArgN').textContent = seenArgIds.size;
+  $('clearVoteN').textContent = voteCounts['贊成'] + voteCounts['反對'];
+  $('clearModal').classList.remove('hidden');
+}
+function closeClearModal() { $('clearModal').classList.add('hidden'); }
+
+async function clearClass() {
+  if (!db || !currentClass) return;
+  const cls = currentClass;
+  const btn = $('clearConfirmBtn');
+  btn.disabled = true;
+  btn.textContent = '清除中…';
+
+  try {
+    const r1 = await db.from('arguments').delete().eq('class_name', cls);
+    if (r1.error) throw r1.error;
+    const r2 = await db.from('votes').delete().eq('class_name', cls);
+    if (r2.error) throw r2.error;
+
+    // 沒有 delete 權限時 Supabase 不會報錯，只是刪不掉，所以要再數一次確認
+    const [ca, cv] = await Promise.all([
+      db.from('arguments').select('id', { count: 'exact', head: true }).eq('class_name', cls),
+      db.from('votes').select('id', { count: 'exact', head: true }).eq('class_name', cls),
+    ]);
+    if ((ca.count || 0) > 0 || (cv.count || 0) > 0) {
+      throw new Error('資料沒有被刪除，請先在 Supabase 執行 schema_update.sql（開放刪除權限）');
+    }
+
+    // 關閉終極投票；這個更新也會即時通知學生端，讓他們解除「已送出」的鎖定
+    const r3 = await db.from('system_status').upsert(
+      { class_name: cls, voting_open: false, updated_at: new Date().toISOString() },
+      { onConflict: 'class_name' }
+    );
+    if (r3.error) throw r3.error;
+
+    if (cls === currentClass) {
+      resetIslands();
+      voteCounts = { '贊成': 0, '反對': 0 };
+      votingOpen = false;
+      renderVoteCounts();
+      renderVotingUI();
+    }
+    closeClearModal();
+    toast('🧹 已清除「' + cls + '」的資料');
+  } catch (e) {
+    console.error(e);
+    toast('清除失敗：' + (e.message || e), 4200);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '確定清除';
+  }
+}
+
 /* ---------- 初始化 ---------- */
 function fillClassList() {
   const dl = $('classList');
@@ -670,6 +860,21 @@ function init() {
   $('classInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') setClass(e.target.value); });
   $('toggleVoteBtn').addEventListener('click', toggleVoting);
   $('exportBtn').addEventListener('click', exportExcel);
+  $('clearBtn').addEventListener('click', openClearModal);
+  $('clearCancelBtn').addEventListener('click', closeClearModal);
+  $('clearExportBtn').addEventListener('click', exportExcel);
+  $('clearConfirmBtn').addEventListener('click', clearClass);
+
+  renderFloaters([
+    { icon: 'leopardcat',     pos: 'left:30%;top:11%',    size: 84, op: .95 },
+    { icon: 'cloudedleopard', pos: 'right:30%;top:11%',   size: 84, op: .95 },
+    { icon: 'plant',          pos: 'left:13%;top:36%',    size: 88, op: .95 },
+    { icon: 'ac',             pos: 'right:13%;top:38%',   size: 88, op: .95 },
+    { icon: 'wafer',          pos: 'left:12%;top:55%',    size: 80, op: .9 },
+    { icon: 'phone',          pos: 'right:12%;top:55%',   size: 80, op: .9 },
+    { icon: 'scooter',        pos: 'left:31%;bottom:22%', size: 84, op: .9 },
+    { icon: 'tree',           pos: 'right:31%;bottom:22%',size: 84, op: .9 },
+  ]);
 
   if (!CONFIGURED) {
     $('configWarn').classList.remove('hidden');

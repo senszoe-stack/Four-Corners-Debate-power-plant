@@ -56,17 +56,17 @@
       color: #5B4B63;
       -webkit-tap-highlight-color: transparent;
       background:
-        radial-gradient(700px 500px at 10% 0%,   #FFE1E8 0%, transparent 60%),
-        radial-gradient(700px 500px at 100% 20%, #DCEBFA 0%, transparent 60%),
-        radial-gradient(700px 500px at 0% 80%,   #FFE7CF 0%, transparent 60%),
-        radial-gradient(700px 500px at 100% 100%,#D8F0E4 0%, transparent 60%),
-        #FFF7EC;
+        radial-gradient(700px 500px at 10% 0%,    #F4BFCB 0%, transparent 60%),
+        radial-gradient(700px 500px at 100% 20%,  #B7D3F0 0%, transparent 60%),
+        radial-gradient(700px 500px at 0% 80%,    #F5C99B 0%, transparent 60%),
+        radial-gradient(700px 500px at 100% 100%, #B5DEC6 0%, transparent 60%),
+        #EAD7BC;
       background-attachment: fixed;
     }
     body::before {
       content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-      background-image: radial-gradient(#F0D3BD 2px, transparent 2.5px);
-      background-size: 30px 30px; opacity: .45;
+      background-image: radial-gradient(#D2B48F 2px, transparent 2.5px);
+      background-size: 30px 30px; opacity: .5;
     }
 
     /* ===== 動態島膠囊（上方四個） ===== */
@@ -75,11 +75,15 @@
       border: 3px solid var(--accent);
       border-radius: 32px;
       overflow: hidden;
-      box-shadow: 0 8px 22px rgba(120, 90, 110, .15);
-      transition: box-shadow .6s ease, transform .35s ease;
+      box-shadow: 0 8px 22px rgba(120, 90, 110, .18);
+      transition: box-shadow .6s ease, transform .35s ease, opacity .5s ease, filter .5s ease;
     }
     .s-island:active { transform: scale(.985); }
-    .s-island.open { box-shadow: 0 12px 32px rgba(120, 90, 110, .2), 0 0 0 6px var(--accent-glow); }
+    .s-island.open { box-shadow: 0 12px 32px rgba(120, 90, 110, .22), 0 0 0 6px var(--accent-glow); }
+    /* 已送出：其他三個島變淡，選擇的那個維持清楚 */
+    .s-island.locked { opacity: .5; filter: saturate(.4); }
+    .s-island.locked .head { cursor: not-allowed; }
+    .s-island.locked.chosen { opacity: 1; filter: none; box-shadow: 0 0 0 6px var(--accent-glow); }
     .s-body {
       display: grid;
       grid-template-rows: 0fr;
@@ -107,16 +111,16 @@
     }
     .vote-box[data-state="closed"] {
       width: min(23rem, 92vw); height: 3.5rem; border-radius: 1.75rem;
-      background: #E5E7EB; border-color: #D1D5DB; box-shadow: 0 6px 18px rgba(120,90,110,.15);
+      background: #E5E7EB; border-color: #D1D5DB; box-shadow: 0 6px 18px rgba(120,90,110,.2);
     }
     .vote-box[data-state="open"] {
       width: min(34rem, 94vw); height: 11.5rem; border-radius: 2.5rem;
       background: #FFFFFF; border-color: #8FD6B1;
-      box-shadow: 0 14px 40px rgba(143,214,177,.55), 0 0 0 6px rgba(143,214,177,.25);
+      box-shadow: 0 14px 40px rgba(143,214,177,.6), 0 0 0 6px rgba(143,214,177,.3);
     }
     .vote-box[data-state="voted"] {
       width: min(26rem, 92vw); height: 3.5rem; border-radius: 1.75rem;
-      background: #CDEFDD; border-color: #8FD6B1; box-shadow: 0 6px 20px rgba(143,214,177,.45);
+      background: #CDEFDD; border-color: #8FD6B1; box-shadow: 0 6px 20px rgba(143,214,177,.5);
     }
 
     .vlayer { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; transition: opacity .45s ease; opacity: 0; pointer-events: none; }
@@ -132,14 +136,29 @@
     ⚠️ 尚未填寫 SUPABASE_URL / SUPABASE_KEY，請先編輯本檔案頂端的 JavaScript 變數。
   </div>
 
-  <div id="toast" class="hidden fixed top-6 left-1/2 z-50 px-6 py-3 rounded-full bg-white border-2 border-[#F3D9C4] text-lg font-bold shadow-xl max-w-[92vw] text-center"></div>
+  <div id="toast" class="hidden fixed top-6 left-1/2 z-50 px-6 py-3 rounded-full bg-white border-2 border-[#E6C7A6] text-lg font-bold shadow-xl max-w-[92vw] text-center"></div>
 
-  <!-- 角落的可愛小圖樣 -->
-  <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
-    <span class="absolute text-4xl animate-float opacity-70" style="left:3%; top:18%;">⚡</span>
-    <span class="absolute text-4xl animate-float opacity-70" style="right:3%; top:30%; animation-delay:-1.4s;">💡</span>
-    <span class="absolute text-4xl animate-float opacity-60" style="left:2%; top:55%; animation-delay:-2.2s;">🔋</span>
-    <span class="absolute text-4xl animate-float opacity-60" style="right:2%; top:68%; animation-delay:-3s;">🌱</span>
+  <!-- 兩側的可愛小圖樣（由 JS 放入） -->
+  <div id="floatHost" class="fixed inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true"></div>
+
+  <!-- ================= 確認送出視窗 ================= -->
+  <div id="confirmModal" class="hidden fixed inset-0 z-50">
+    <div class="absolute inset-0 flex items-center justify-center px-5 bg-[#4A3B52]/45">
+      <div class="w-full max-w-md bg-white rounded-[2rem] border-2 border-[#E6C7A6] p-6 shadow-2xl animate-pop-in">
+        <h3 class="text-2xl font-black">確定要送出嗎？ 🤔</h3>
+        <p class="mt-3 text-[#5B4B63]/70">你選擇的立場</p>
+        <p id="cmIsland" class="text-xl font-black"></p>
+        <p class="mt-3 text-[#5B4B63]/70">你的理由</p>
+        <p id="cmReason" class="mt-1 rounded-2xl bg-[#FFF7EC] border-2 border-[#F3D9C4] px-4 py-3 text-lg break-words max-h-48 overflow-y-auto"></p>
+        <p class="mt-4 rounded-2xl bg-[#FFF1D6] border-2 border-[#F2B766] px-4 py-3 font-bold text-[#8A5A12]">
+          ⚠️ 每人只能送出一次，送出後不能修改。
+        </p>
+        <div class="mt-5 grid grid-cols-2 gap-3">
+          <button id="cmCancel" type="button" class="rounded-full bg-[#F1ECF4] hover:bg-[#E6DDEC] active:scale-95 transition py-3.5 font-black text-lg">再想想</button>
+          <button id="cmOk" type="button" class="rounded-full bg-[#8FD6B1] text-[#3F3447] shadow-md shadow-emerald-300/50 hover:brightness-105 active:scale-95 transition py-3.5 font-black text-lg disabled:opacity-50">確定送出</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ================= 登入頁 ================= -->
@@ -162,10 +181,10 @@
         <h1 class="mt-3 text-4xl font-black leading-snug">
           你贊成增建更多<span class="bg-[linear-gradient(transparent_62%,#FFD6A5_62%)] px-1">電廠</span>嗎？
         </h1>
-        <p class="mt-3 text-[#5B4B63]/65">請輸入你的資料進入課堂 ✏️</p>
+        <p class="mt-3 text-[#5B4B63]/75">請輸入你的資料進入課堂 ✏️</p>
       </div>
 
-      <form id="loginForm" class="bg-white border-2 border-[#F3D9C4] rounded-[2.5rem] p-7 shadow-xl shadow-orange-200/40 space-y-5" autocomplete="off">
+      <form id="loginForm" class="bg-white border-2 border-[#E6C7A6] rounded-[2.5rem] p-7 shadow-xl shadow-orange-300/40 space-y-5" autocomplete="off">
         <label class="block">
           <span class="text-[#5B4B63]/70 text-sm ml-2">🏫 班級</span>
           <input id="inClass" list="classList" required placeholder="例：一年一班"
@@ -195,7 +214,7 @@
     <div class="max-w-xl mx-auto">
 
       <!-- 身分列 -->
-      <div class="flex items-center justify-between bg-white/90 rounded-full pl-5 pr-2 py-2 border-2 border-[#F3D9C4] shadow-md shadow-orange-200/40">
+      <div class="flex items-center justify-between bg-white/90 rounded-full pl-5 pr-2 py-2 border-2 border-[#E6C7A6] shadow-md shadow-orange-300/40">
         <div class="flex items-center gap-2 min-w-0">
           <span id="connDot" class="w-2.5 h-2.5 rounded-full bg-neutral-400 shrink-0"></span>
           <span id="meLabel" class="font-bold truncate"></span>
@@ -204,7 +223,7 @@
       </div>
 
       <!-- 辯題 -->
-      <div class="mt-5 flex items-center gap-4 bg-white border-2 border-[#F3D9C4] rounded-[2rem] px-5 py-4 shadow-lg shadow-orange-200/40">
+      <div class="mt-5 flex items-center gap-4 bg-white border-2 border-[#E6C7A6] rounded-[2rem] px-5 py-4 shadow-lg shadow-orange-300/40">
         <svg viewBox="0 0 140 160" class="w-14 h-16 shrink-0 animate-bob" aria-hidden="true">
           <g stroke="#F5C04A" stroke-width="6" stroke-linecap="round">
             <path d="M70 6v12"/><path d="M22 28l9 8"/><path d="M118 28l-9 8"/>
@@ -217,15 +236,36 @@
           <path d="M60 84q10 11 20 0" stroke="#4A3F55" stroke-width="4" fill="none" stroke-linecap="round"/>
         </svg>
         <div>
-          <p class="text-sm text-[#5B4B63]/55">今天的辯題</p>
+          <p class="text-sm text-[#5B4B63]/60">今天的辯題</p>
           <h2 class="text-2xl font-black leading-snug">你贊成增建更多電廠嗎？</h2>
         </div>
       </div>
 
-      <h3 class="mt-5 mb-3 text-center text-[#5B4B63]/70 text-lg">選擇你的立場，說出你的理由 👇</h3>
+      <!-- 規則提醒：先想清楚再寫（送出前顯示） -->
+      <div id="ruleBanner" class="mt-4 rounded-[1.75rem] border-2 border-[#F2B766] bg-[#FFF1D6] px-5 py-4 shadow-md shadow-orange-300/30">
+        <p class="font-black text-lg text-[#8A5A12]">📌 先想一想，再動筆！</p>
+        <p class="mt-1 text-[#6B4A12] leading-relaxed">
+          每個人<b>只能送出一次</b>理由，送出後<b>不能修改</b>。寫之前先問自己：
+        </p>
+        <ol class="mt-1 text-[#6B4A12] leading-relaxed list-decimal list-inside">
+          <li>我選哪一個立場？為什麼？</li>
+          <li>有沒有例子、數據或生活經驗可以支持？</li>
+          <li>別人看了，能不能懂我的想法？</li>
+        </ol>
+      </div>
+
+      <!-- 已送出：顯示我的理由 -->
+      <div id="mineCard" class="hidden mt-4 rounded-[1.75rem] border-2 border-[#7CCBA2] bg-[#E3F6EC] px-5 py-4 shadow-md shadow-emerald-300/30 animate-pop-in">
+        <p class="font-black text-lg text-[#2F8F63]">✅ 你的理由已送出</p>
+        <p class="mt-1">立場：<b id="mineIsland"></b></p>
+        <p id="mineReason" class="mt-2 bg-white rounded-2xl px-4 py-3 text-lg break-words"></p>
+        <p class="mt-2 text-sm text-[#5B4B63]/70">每人只能送出一次，接下來請聽老師的指示，等待終極投票。</p>
+      </div>
+
+      <h3 id="pickHint" class="mt-5 mb-3 text-center text-[#4A3B52]/80 text-lg">選擇你的立場，說出你的理由 👇</h3>
 
       <!-- 四個動態島 -->
-      <div id="islandList" class="space-y-3"></div>
+      <div id="islandList" class="space-y-3 mt-3"></div>
     </div>
   </section>
 
@@ -270,11 +310,129 @@
 const SUPABASE_URL = 'https://qtabbosbrdoblhecssrd.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_xBePEbyZJ7gGhbONOuAizg_mWMH2X-t';
 
+/* 理由最少要寫幾個字（鼓勵學生想完整再送出；不想限制可改成 1） */
+const MIN_REASON = 20;
+
 /* ===================================================================== */
 const CONFIGURED = !SUPABASE_URL.includes('請替換') && !SUPABASE_KEY.includes('請替換');
 const db = CONFIGURED ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 const $ = (id) => document.getElementById(id);
+
+/* ---------- 可愛小圖樣（手繪 SVG）：發電廠、冷氣機、晶圓、手機、電動機車、樹木、石虎、雲豹 ---------- */
+const ICON_ATTR = 'viewBox="0 0 64 64" style="width:100%;height:100%;overflow:visible" fill="none" stroke="#6B5A73" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"';
+const ICONS = {
+  /* 發電廠：兩座冷卻水塔 + 白煙 */
+  plant: `<svg ${ICON_ATTR}>
+    <circle cx="22" cy="12" r="5" fill="#fff"/><circle cx="29" cy="7" r="4" fill="#fff"/><circle cx="44" cy="17" r="4.5" fill="#fff"/>
+    <path d="M12 56Q17 40 14 22H32Q29 40 34 56Z" fill="#EDE7F3"/>
+    <path d="M36 56Q40 44 38 30H52Q50 44 54 56Z" fill="#F7D9BD"/>
+    <path d="M6 56H60"/>
+    <circle cx="19.5" cy="38" r="1.7" fill="#4A3F55" stroke="none"/><circle cx="27" cy="38" r="1.7" fill="#4A3F55" stroke="none"/>
+    <path d="M21 43q2.5 3 5 0" stroke-width="2"/>
+    <ellipse cx="16.5" cy="42" rx="2.4" ry="1.6" fill="#F8B4C4" stroke="none"/><ellipse cx="30" cy="42" rx="2.4" ry="1.6" fill="#F8B4C4" stroke="none"/>
+  </svg>`,
+
+  /* 冷氣機：掛壁式 + 涼風 */
+  ac: `<svg ${ICON_ATTR}>
+    <rect x="6" y="12" width="52" height="26" rx="9" fill="#fff"/>
+    <path d="M13 32H51" stroke-width="2"/>
+    <circle cx="23" cy="21" r="1.9" fill="#4A3F55" stroke="none"/><circle cx="41" cy="21" r="1.9" fill="#4A3F55" stroke="none"/>
+    <path d="M29 23.5q3 3 6 0" stroke-width="2"/>
+    <ellipse cx="16" cy="25" rx="3" ry="2" fill="#F8B4C4" stroke="none"/><ellipse cx="48" cy="25" rx="3" ry="2" fill="#F8B4C4" stroke="none"/>
+    <path d="M18 43q-4 5 0 11" stroke="#7DB7E8"/><path d="M32 43q-4 5 0 11" stroke="#7DB7E8"/><path d="M46 43q-4 5 0 11" stroke="#7DB7E8"/>
+  </svg>`,
+
+  /* 晶圓：圓盤 + 方格晶粒 + 反光 */
+  wafer: `<svg ${ICON_ATTR}>
+    <defs>
+      <linearGradient id="wfg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#D9C9F2"/><stop offset=".5" stop-color="#BFE0F5"/><stop offset="1" stop-color="#C9F0DA"/></linearGradient>
+      <clipPath id="wfc"><circle cx="32" cy="32" r="25"/></clipPath>
+    </defs>
+    <circle cx="32" cy="32" r="25" fill="url(#wfg)"/>
+    <g clip-path="url(#wfc)" stroke="#8FA6C9" stroke-width="1.2">
+      <path d="M13 6V58M19 6V58M25 6V58M31 6V58M37 6V58M43 6V58M49 6V58"/>
+      <path d="M6 13H58M6 19H58M6 25H58M6 31H58M6 37H58M6 43H58M6 49H58"/>
+    </g>
+    <circle cx="32" cy="32" r="25"/>
+    <path d="M16 22Q20 14 29 11" stroke="#fff" stroke-width="3.2"/>
+    <path d="M27 57h10" stroke-width="2"/>
+  </svg>`,
+
+  /* 手機：笑臉螢幕 */
+  phone: `<svg ${ICON_ATTR}>
+    <rect x="18" y="5" width="28" height="54" rx="8" fill="#fff"/>
+    <rect x="22" y="12" width="20" height="38" rx="3" fill="#BFE1F7" stroke-width="1.6"/>
+    <path d="M28 8.5H36" stroke-width="2"/>
+    <circle cx="28" cy="28" r="1.8" fill="#4A3F55" stroke="none"/><circle cx="36" cy="28" r="1.8" fill="#4A3F55" stroke="none"/>
+    <path d="M29 33q3 3 6 0" stroke-width="1.8"/>
+    <ellipse cx="25.5" cy="32" rx="2" ry="1.4" fill="#F8B4C4" stroke="none"/><ellipse cx="38.5" cy="32" rx="2" ry="1.4" fill="#F8B4C4" stroke="none"/>
+    <circle cx="32" cy="54.5" r="1.6" fill="#6B5A73" stroke="none"/>
+  </svg>`,
+
+  /* 電動機車：薄荷綠車身 + 閃電 */
+  scooter: `<svg ${ICON_ATTR}>
+    <path d="M44 38L47 17H55" />
+    <circle cx="53" cy="22" r="2.2" fill="#FFD86B" stroke-width="1.6"/>
+    <path d="M16 44Q15 33 25 33H38Q44 33 46 40L48 44Z" fill="#8FD6B1"/>
+    <path d="M19 31H33" stroke="#4A3F55" stroke-width="4"/>
+    <circle cx="14" cy="47" r="8" fill="#4A3F55"/><circle cx="14" cy="47" r="3" fill="#E6DDEC" stroke="none"/>
+    <circle cx="50" cy="47" r="8" fill="#4A3F55"/><circle cx="50" cy="47" r="3" fill="#E6DDEC" stroke="none"/>
+    <path d="M33 34L27 41H32L30 47L37 39H32Z" fill="#FFD86B" stroke-width="1.8"/>
+  </svg>`,
+
+  /* 樹木：圓圓的樹冠 + 笑臉 */
+  tree: `<svg ${ICON_ATTR}>
+    <rect x="28" y="40" width="8" height="18" rx="3" fill="#D2A77C"/>
+    <circle cx="32" cy="21" r="15" fill="#9ADBB5"/>
+    <circle cx="19" cy="34" r="11" fill="#9ADBB5"/>
+    <circle cx="45" cy="34" r="11" fill="#9ADBB5"/>
+    <circle cx="32" cy="33" r="14" fill="#9ADBB5" stroke="none"/>
+    <circle cx="27" cy="30" r="1.8" fill="#4A3F55" stroke="none"/><circle cx="37" cy="30" r="1.8" fill="#4A3F55" stroke="none"/>
+    <path d="M29 35q3 3 6 0" stroke-width="2"/>
+    <ellipse cx="23.5" cy="34" rx="2.5" ry="1.7" fill="#F8B4C4" stroke="none"/><ellipse cx="40.5" cy="34" rx="2.5" ry="1.7" fill="#F8B4C4" stroke="none"/>
+    <path d="M18 58H46"/>
+  </svg>`,
+
+  /* 石虎：圓耳、額頭兩道深色縱紋、斑點 */
+  leopardcat: `<svg ${ICON_ATTR}>
+    <circle cx="15" cy="17" r="8" fill="#D9A66C"/><circle cx="49" cy="17" r="8" fill="#D9A66C"/>
+    <circle cx="15" cy="18" r="4" fill="#F8D3C0" stroke="none"/><circle cx="49" cy="18" r="4" fill="#F8D3C0" stroke="none"/>
+    <ellipse cx="32" cy="37" rx="23" ry="19" fill="#D9A66C"/>
+    <path d="M26 20Q27 26 25 31" stroke="#5A3E2B" stroke-width="3"/><path d="M38 20Q37 26 39 31" stroke="#5A3E2B" stroke-width="3"/>
+    <path d="M21 32Q24 28 26.500 29" stroke="#FFF4E6" stroke-width="2"/><path d="M43 32Q40 28 37.500 29" stroke="#FFF4E6" stroke-width="2"/>
+    <g fill="#7A4E2D" stroke="none"><circle cx="13" cy="36" r="1.8"/><circle cx="51" cy="36" r="1.8"/><circle cx="17" cy="45" r="1.8"/><circle cx="47" cy="45" r="1.8"/><circle cx="32" cy="22" r="1.5"/></g>
+    <circle cx="24" cy="36" r="3.2" fill="#3F3447" stroke="none"/><circle cx="40" cy="36" r="3.2" fill="#3F3447" stroke="none"/>
+    <circle cx="25" cy="35" r="1" fill="#fff" stroke="none"/><circle cx="41" cy="35" r="1" fill="#fff" stroke="none"/>
+    <ellipse cx="32" cy="46" rx="9" ry="7" fill="#FFF4E6" stroke="none"/>
+    <path d="M30 42H34L32 45Z" fill="#E88FA5" stroke-width="1.4"/>
+    <path d="M32 45V47M32 47q-3 3-6 0M32 47q3 3 6 0" stroke-width="1.8"/>
+  </svg>`,
+
+  /* 雲豹：雲朵狀斑塊、額頭短紋 */
+  cloudedleopard: `<svg ${ICON_ATTR}>
+    <circle cx="16" cy="18" r="7" fill="#D9C79E"/><circle cx="48" cy="18" r="7" fill="#D9C79E"/>
+    <circle cx="16" cy="19" r="3.500" fill="#8B7A5E" stroke="none"/><circle cx="48" cy="19" r="3.500" fill="#8B7A5E" stroke="none"/>
+    <ellipse cx="32" cy="37" rx="23" ry="18" fill="#D9C79E"/>
+    <g transform="translate(8 8) scale(.75)"><path d="M7 38a4 4 0 0 1 3-6a5 5 0 0 1 9-1a4 4 0 0 1 3 6q-7 3-15 1z" fill="#B59F76" stroke="#5A4A3A" stroke-width="1.8"/></g>
+    <g transform="translate(64 0) scale(-1 1)"><g transform="translate(8 8) scale(.75)"><path d="M7 38a4 4 0 0 1 3-6a5 5 0 0 1 9-1a4 4 0 0 1 3 6q-7 3-15 1z" fill="#B59F76" stroke="#5A4A3A" stroke-width="1.8"/></g></g>
+    <path d="M28 21V27M36 21V27" stroke="#5A4A3A" stroke-width="2.4"/>
+    <circle cx="27" cy="37" r="3.200" fill="#3F3447" stroke="none"/><circle cx="37" cy="37" r="3.200" fill="#3F3447" stroke="none"/>
+    <circle cx="28" cy="36" r="1" fill="#fff" stroke="none"/><circle cx="38" cy="36" r="1" fill="#fff" stroke="none"/>
+    <ellipse cx="32" cy="46.500" rx="8" ry="5.500" fill="#F4EBD5" stroke="none"/>
+    <path d="M30 42.500H34L32 45Z" fill="#D88AA0" stroke-width="1.4"/>
+    <path d="M32 45V47M32 47q-3 3-6 0M32 47q3 3 6 0" stroke-width="1.8"/>
+  </svg>`,
+};
+
+/* 在 #floatHost 放上會輕輕飄浮的小圖樣。list: [{ icon, pos, size, op }] */
+function renderFloaters(list) {
+  const host = document.getElementById('floatHost');
+  if (!host) return;
+  host.innerHTML = list.map((f, i) =>
+    `<div class="absolute animate-float" style="${f.pos};width:${f.size}px;height:${f.size}px;opacity:${f.op};animation-delay:-${(i * 0.9).toFixed(1)}s;filter:drop-shadow(0 4px 4px rgba(90,60,70,.2))">${ICONS[f.icon]}</div>`
+  ).join('');
+}
 
 const ISLANDS = [
   { key: '非常贊成',   emoji: '🥰', accent: '#7CCBA2', ink: '#2F8F63', hint: '我非常同意，因為……' },
@@ -287,6 +445,8 @@ const ISLANDS = [
 let me = null;              // { cls, seat, name }
 let votingOpen = false;
 let myVote = null;          // '贊成' | '反對' | null
+let mySub = null;           // { island, reason } | null：我已送出的理由
+let pending = null;         // 等待確認送出的內容
 let statusChannel = null;
 let pollTimer = null;
 let sending = false;
@@ -309,8 +469,6 @@ function setConn(state) {
   else if (state === 'err') dot.classList.add('bg-rose-400');
   else                      dot.classList.add('bg-neutral-400');
 }
-
-const voteKey = () => `debate_voted:${me.cls}:${me.seat}`;
 
 /* ---------- 登入 ---------- */
 function fillClassList() {
@@ -337,7 +495,8 @@ $('logoutBtn').addEventListener('click', () => {
   statusChannel = null;
   clearInterval(pollTimer);
   localStorage.removeItem('debate_student');
-  me = null; myVote = null; votingOpen = false;
+  me = null; myVote = null; mySub = null; votingOpen = false;
+  closeConfirm();
   $('mainView').classList.add('hidden');
   $('voteDock').classList.add('hidden');
   $('loginView').classList.remove('hidden');
@@ -354,26 +513,28 @@ function buildIslands() {
     el.style.animationDelay = (idx * 90) + 'ms';
     el.dataset.key = isl.key;
     el.style.setProperty('--accent', isl.accent);
-    el.style.setProperty('--accent-glow', isl.accent + '55');
+    el.style.setProperty('--accent-glow', isl.accent + '66');
 
     el.innerHTML = `
       <button type="button" class="head w-full h-16 flex items-center gap-4 px-5 text-left">
         <span class="text-3xl leading-none">${isl.emoji}</span>
         <span class="font-black text-2xl" style="color:${isl.ink}">${isl.key}</span>
+        <span class="tick hidden ml-1 text-2xl">✅</span>
         <svg class="chev ml-auto w-6 h-6 text-[#5B4B63]/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
       <div class="s-body">
         <div class="s-inner">
           <div class="px-5 pb-5 pt-1">
+            <p class="mb-2 text-sm font-bold" style="color:${isl.ink}">💭 想清楚了嗎？理由至少 ${MIN_REASON} 個字，每人只能送出一次，送出後不能修改喔！</p>
             <textarea rows="3" maxlength="120" placeholder="${isl.hint}"
               class="w-full resize-none rounded-3xl bg-[#FFF7EC] px-5 py-4 text-lg outline-none border-2 transition placeholder-[#5B4B63]/30"
               style="border-color:${isl.accent}88; color:#4A3F55"></textarea>
             <div class="mt-3 flex items-center justify-between">
-              <span class="counter text-[#5B4B63]/45 text-sm tabular-nums">0 / 120</span>
+              <span class="counter text-[#5B4B63]/50 text-sm tabular-nums">0 / 120</span>
               <div class="flex gap-2">
                 <button type="button" class="cancel rounded-full bg-[#F1ECF4] hover:bg-[#E6DDEC] active:scale-95 transition px-5 py-2.5 font-bold">取消</button>
                 <button type="button" class="send rounded-full px-7 py-2.5 font-black text-[#3F3447] shadow-md active:scale-95 hover:brightness-105 transition disabled:opacity-50"
-                        style="background:${isl.accent}">送出理由</button>
+                        style="background:${isl.accent}">檢查並送出</button>
               </div>
             </div>
           </div>
@@ -386,13 +547,14 @@ function buildIslands() {
 
     el.querySelector('.head').addEventListener('click', () => toggleIsland(el));
     el.querySelector('.cancel').addEventListener('click', () => el.classList.remove('open'));
-    el.querySelector('.send').addEventListener('click', () => submitReason(isl, el));
+    el.querySelector('.send').addEventListener('click', () => askConfirm(isl, el));
 
     host.appendChild(el);
   });
 }
 
 function toggleIsland(el) {
+  if (mySub) { toast('你已經送出過理由囉，每人只能送出一次'); return; }
   const willOpen = !el.classList.contains('open');
   document.querySelectorAll('.s-island').forEach((x) => x.classList.remove('open'));
   if (willOpen) {
@@ -402,17 +564,59 @@ function toggleIsland(el) {
   }
 }
 
-async function submitReason(isl, el) {
-  if (sending) return;
+/* 依照 mySub 更新畫面：已送出就鎖定四個島、顯示我的理由 */
+function renderMine() {
+  const locked = !!mySub;
+  $('mineCard').classList.toggle('hidden', !locked);
+  $('ruleBanner').classList.toggle('hidden', locked);
+  $('pickHint').classList.toggle('hidden', locked);
+
+  if (locked) {
+    const isl = ISLANDS.find((i) => i.key === mySub.island);
+    $('mineIsland').textContent = (isl ? isl.emoji + ' ' : '') + mySub.island;
+    $('mineReason').textContent = mySub.reason;
+  }
+
+  document.querySelectorAll('.s-island').forEach((el) => {
+    if (locked) el.classList.remove('open');
+    el.classList.toggle('locked', locked);
+    el.classList.toggle('chosen', locked && el.dataset.key === mySub.island);
+    el.querySelector('.tick').classList.toggle('hidden', !(locked && el.dataset.key === mySub.island));
+  });
+}
+
+/* ---------- 送出理由（先確認，再寫入；每人只能一次） ---------- */
+function askConfirm(isl, el) {
+  if (mySub) { toast('你已經送出過理由囉，每人只能送出一次'); return; }
   const ta = el.querySelector('textarea');
-  const btn = el.querySelector('.send');
   const reason = ta.value.trim();
   if (!reason) { toast('請先輸入理由'); ta.focus(); return; }
+  if (reason.length < MIN_REASON) {
+    toast(`理由至少寫 ${MIN_REASON} 個字，再想完整一點喔`);
+    ta.focus();
+    return;
+  }
   if (!db) { toast('尚未設定 Supabase'); return; }
 
+  pending = { isl, el, reason };
+  $('cmIsland').textContent = `${isl.emoji} ${isl.key}`;
+  $('cmReason').textContent = reason;
+  $('confirmModal').classList.remove('hidden');
+}
+
+function closeConfirm() {
+  $('confirmModal').classList.add('hidden');
+  pending = null;
+}
+
+async function doSubmit() {
+  if (!pending || sending || !db) return;
+  const { isl, el, reason } = pending;
+  const okBtn = $('cmOk');
+
   sending = true;
-  btn.disabled = true;
-  btn.textContent = '送出中…';
+  okBtn.disabled = true;
+  okBtn.textContent = '送出中…';
 
   const { error } = await db.from('arguments').insert({
     class_name: me.cls,
@@ -423,16 +627,30 @@ async function submitReason(isl, el) {
   });
 
   sending = false;
-  btn.disabled = false;
-  btn.textContent = '送出理由';
+  okBtn.disabled = false;
+  okBtn.textContent = '確定送出';
+  closeConfirm();
 
-  if (error) { toast('送出失敗：' + error.message, 3600); return; }
+  if (error) {
+    if (error.code === '23505') {          // 唯一鍵衝突：這個座號已經送過了
+      await syncMine();
+      toast('你已經送出過理由了，每人只能送一次', 3200);
+      return;
+    }
+    toast('送出失敗：' + error.message, 3600);
+    return;
+  }
 
-  ta.value = '';
+  mySub = { island: isl.key, reason };
+  el.querySelector('textarea').value = '';
   el.querySelector('.counter').textContent = '0 / 120';
-  el.classList.remove('open');
+  renderMine();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
   toast(`✅ 已送出到「${isl.key}」`);
 }
+
+$('cmCancel').addEventListener('click', closeConfirm);
+$('cmOk').addEventListener('click', doSubmit);
 
 /* ---------- 終極投票箱 ---------- */
 function applyVoteState() {
@@ -468,8 +686,7 @@ async function castVote(choice) {
 
   if (error) {
     if (error.code === '23505') {            // 已投過（唯一鍵衝突）
-      await checkExistingVote();
-      applyVoteState();
+      await syncMine();
       toast('你已經投過票了');
       return;
     }
@@ -479,21 +696,28 @@ async function castVote(choice) {
   }
 
   myVote = choice;
-  try { localStorage.setItem(voteKey(), choice); } catch (_) {}
   applyVoteState();
 }
 
 $('voteAgree').addEventListener('click', () => castVote('贊成'));
 $('voteDisagree').addEventListener('click', () => castVote('反對'));
 
-async function checkExistingVote() {
-  let local = null;
-  try { local = localStorage.getItem(voteKey()); } catch (_) {}
-  myVote = local || null;
-  if (!db) return;
-  const { data } = await db.from('votes').select('choice')
-    .eq('class_name', me.cls).eq('seat', me.seat).maybeSingle();
-  if (data && data.choice) myVote = data.choice;
+/* 以資料庫為準，同步「我送出過的理由」與「我投過的票」。
+   老師清除本班資料後，這裡會讓學生自動解除鎖定、可以重新填寫。 */
+async function syncMine() {
+  if (!db || !me) return;
+  const [a, v] = await Promise.all([
+    db.from('arguments').select('island,reason')
+      .eq('class_name', me.cls).eq('seat', me.seat)
+      .order('created_at', { ascending: true }).limit(1),
+    db.from('votes').select('choice')
+      .eq('class_name', me.cls).eq('seat', me.seat)
+      .order('created_at', { ascending: true }).limit(1),
+  ]);
+  if (!a.error) mySub = (a.data && a.data[0]) ? { island: a.data[0].island, reason: a.data[0].reason } : null;
+  if (!v.error) myVote = (v.data && v.data[0]) ? v.data[0].choice : null;
+  renderMine();
+  applyVoteState();
 }
 
 async function fetchStatus() {
@@ -513,7 +737,10 @@ function subscribeStatus() {
       { event: '*', schema: 'public', table: 'system_status', filter: `class_name=eq.${cls}` },
       (p) => {
         const row = p.new;
-        if (row && row.class_name === me.cls) setVotingOpen(!!row.voting_open);
+        if (row && row.class_name === me.cls) {
+          setVotingOpen(!!row.voting_open);
+          syncMine();   // 老師清除資料時也會更新這張表，順便重新確認我的狀態
+        }
       })
     .subscribe((status) => {
       if (status === 'SUBSCRIBED') { setConn('ok'); fetchStatus(); }
@@ -523,11 +750,11 @@ function subscribeStatus() {
 
   // 保險機制：平板休眠或網路中斷後，定期補抓狀態
   clearInterval(pollTimer);
-  pollTimer = setInterval(fetchStatus, 8000);
+  pollTimer = setInterval(() => { fetchStatus(); syncMine(); }, 10000);
 }
 
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && me) fetchStatus();
+  if (!document.hidden && me) { fetchStatus(); syncMine(); }
 });
 
 /* ---------- 進入主畫面 ---------- */
@@ -540,11 +767,12 @@ async function enterMain() {
   buildIslands();
   votingOpen = false;
   myVote = null;
+  mySub = null;
+  renderMine();
   applyVoteState();
 
   if (!db) return;
-  await checkExistingVote();
-  applyVoteState();
+  await syncMine();
   await fetchStatus();
   subscribeStatus();
 }
@@ -553,6 +781,17 @@ async function enterMain() {
 function init() {
   fillClassList();
   if (!CONFIGURED) $('configWarn').classList.remove('hidden');
+
+  renderFloaters([
+    { icon: 'plant',          pos: 'left:1%;top:12%',  size: 58, op: .8 },
+    { icon: 'wafer',          pos: 'left:1%;top:34%',  size: 54, op: .8 },
+    { icon: 'scooter',        pos: 'left:1%;top:56%',  size: 58, op: .8 },
+    { icon: 'leopardcat',     pos: 'left:1%;top:77%',  size: 58, op: .85 },
+    { icon: 'ac',             pos: 'right:1%;top:18%', size: 58, op: .8 },
+    { icon: 'phone',          pos: 'right:1%;top:40%', size: 52, op: .8 },
+    { icon: 'tree',           pos: 'right:1%;top:62%', size: 58, op: .8 },
+    { icon: 'cloudedleopard', pos: 'right:1%;top:82%', size: 58, op: .85 },
+  ]);
 
   try {
     const saved = JSON.parse(localStorage.getItem('debate_student') || 'null');
